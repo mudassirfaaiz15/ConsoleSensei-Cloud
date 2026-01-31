@@ -475,7 +475,7 @@ For support, email us at [support@consolesensei.com](mailto:support@consolesense
 
 <div align="center">
 
-**Made with ❤️ by the ConsoleSensei Team**
+**Made with ❤️ by Mudassir Faaiz**
 
 ⭐ If you find this project helpful, please consider giving it a star!
 
