@@ -9,7 +9,7 @@ export const config = {
         timeout: 30000, // 30 seconds
         retryAttempts: 3,
         retryDelay: 1000, // 1 second
-        baseUrl: process.env.VITE_API_URL || 'https://api.consolesensei.com',
+        baseUrl: import.meta.env.VITE_API_URL || 'https://api.consolesensei.com',
     },
 
     // Cache Configuration
@@ -65,9 +65,9 @@ export const config = {
     },
 
     // Environment
-    isDevelopment: process.env.NODE_ENV === 'development',
-    isProduction: process.env.NODE_ENV === 'production',
-    isDemoMode: process.env.VITE_DEMO_MODE === 'true',
+    isDevelopment: import.meta.env.MODE === 'development',
+    isProduction: import.meta.env.MODE === 'production',
+    isDemoMode: import.meta.env.VITE_DEMO_MODE === 'true',
 };
 
 /**
