@@ -23,6 +23,9 @@ const ActivityLogPage = lazy(() => import("@/app/pages/activity-log-page").then(
 const BudgetAlertsPage = lazy(() => import("@/app/pages/budget-alerts-page").then(m => ({ default: m.BudgetAlertsPage })));
 const ReportsPage = lazy(() => import("@/app/pages/reports-page").then(m => ({ default: m.ReportsPage })));
 
+// AWS Resource Management
+const AWSResourcesPage = lazy(() => import("@/app/pages/aws-resources-page").then(m => ({ default: m.AWSResourcesPage })));
+
 // Import layout and protected route
 import { DashboardLayout } from "@/app/components/dashboard-layout";
 import { ProtectedRoute } from "@/app/components/protected-route";
@@ -119,6 +122,10 @@ export const router = createBrowserRouter([
             {
                 path: "reports",
                 element: withSuspense(ReportsPage),
+            },
+            {
+                path: "aws-resources",
+                element: withSuspense(AWSResourcesPage),
             },
         ],
     },

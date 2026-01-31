@@ -11,6 +11,7 @@ import {
 } from '@aws-sdk/client-ec2';
 import { createEC2Client } from './client';
 import { hasCredentials } from './credentials';
+import { logger } from '@/lib/utils/logger';
 
 export interface EC2Instance {
     id: string;
@@ -89,7 +90,7 @@ async function getInstancesForRegion(region: string): Promise<EC2Instance[]> {
             }
         }
     } catch (error) {
-        console.warn(`Failed to fetch instances from ${region}:`, error);
+        logger.warn(`Failed to fetch instances from ${region}`, error as Error);
     }
 
     return instances;
@@ -117,7 +118,7 @@ async function getVolumesForRegion(region: string): Promise<EBSVolume[]> {
             });
         }
     } catch (error) {
-        console.warn(`Failed to fetch volumes from ${region}:`, error);
+        logger.warn(`Failed to fetch volumes from ${region}`, error as Error);
     }
 
     return volumes;
@@ -143,7 +144,7 @@ async function getElasticIPsForRegion(region: string): Promise<ElasticIP[]> {
             });
         }
     } catch (error) {
-        console.warn(`Failed to fetch EIPs from ${region}:`, error);
+        logger.warn(`Failed to fetch EIPs from ${region}`, error as Error);
     }
 
     return ips;

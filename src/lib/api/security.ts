@@ -1,4 +1,6 @@
 import { supabase, isDemoMode } from '@/lib/supabase';
+import { handleApiError } from '@/lib/utils/error-handler';
+import { logger } from '@/lib/utils/logger';
 
 // Types
 export interface SecurityFinding {
@@ -97,13 +99,18 @@ export async function fetchSecurityData(): Promise<SecurityData> {
         };
     }
 
-    const { data, error } = await supabase
-        .from('security_data')
-        .select('*')
-        .single();
+    try {
+        const { data, error } = await supabase
+            .from('security_data')
+            .select('*')
+            .single();
 
-    if (error) throw error;
-    return data;
+        if (error) throw error;
+        return data;
+    } catch (error) {
+        logger.error('Failed to fetch security data', error as Error);
+        throw handleApiError(error);
+    }
 }
 
 export async function updateFindingStatus(id: string, status: SecurityFinding['status']): Promise<SecurityFinding> {

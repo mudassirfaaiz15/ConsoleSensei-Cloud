@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { authService } from '@/services/auth-service';
+import { logger } from '@/lib/utils/logger';
 import type { User, LoginCredentials, RegisterCredentials } from '@/types';
 
 interface AuthContextType {
@@ -40,7 +41,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
                     setUser(user);
                 }
             } catch (err) {
-                console.error('Session check failed:', err);
+                logger.error('Session check failed', err as Error);
             } finally {
                 setIsLoading(false);
             }
@@ -91,7 +92,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         try {
             const { error } = await authService.signOut();
             if (error) {
-                console.error('Logout error:', error);
+                logger.error('Logout error', new Error(error));
             }
             setUser(null);
         } finally {

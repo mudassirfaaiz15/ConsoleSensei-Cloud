@@ -1,4 +1,11 @@
 import { supabase, isDemoMode } from '@/lib/supabase';
+import { handleApiError, AppError } from '@/lib/utils/error-handler';
+import { logger } from '@/lib/utils/logger';
+import { LRUCache } from '@/lib/utils/cache';
+import { analytics } from '@/lib/utils/analytics';
+
+// Cache for cost data (5 minute TTL)
+const costCache = new LRUCache<CostData>(10, { ttl: 5 * 60 * 1000 });
 
 // Types
 export interface MonthlyCost {
@@ -76,39 +83,72 @@ const DEMO_RECOMMENDATIONS: CostRecommendation[] = [
 
 // API Functions
 export async function fetchCostData(): Promise<CostData> {
-    if (isDemoMode) {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        const totalCost = DEMO_SERVICE_COSTS.reduce((sum, s) => sum + s.cost, 0);
-        const potentialSavings = DEMO_RECOMMENDATIONS.reduce((sum, r) => sum + r.savings, 0);
+    try {
+        // Check cache first
+        const cacheKey = 'cost_data_all';
+        const cached = costCache.get(cacheKey);
+        if (cached) {
+            logger.debug('Cost data retrieved from cache');
+            return cached;
+        }
 
-        return {
-            monthlyCosts: DEMO_MONTHLY_COSTS,
-            serviceCosts: DEMO_SERVICE_COSTS,
-            resourceCosts: DEMO_RESOURCE_COSTS,
-            recommendations: DEMO_RECOMMENDATIONS,
-            totalCost,
-            potentialSavings,
-        };
+        if (isDemoMode) {
+            await new Promise(resolve => setTimeout(resolve, 500));
+            const totalCost = DEMO_SERVICE_COSTS.reduce((sum, s) => sum + s.cost, 0);
+            const potentialSavings = DEMO_RECOMMENDATIONS.reduce((sum, r) => sum + r.savings, 0);
+
+            const result = {
+                monthlyCosts: DEMO_MONTHLY_COSTS,
+                serviceCosts: DEMO_SERVICE_COSTS,
+                resourceCosts: DEMO_RESOURCE_COSTS,
+                recommendations: DEMO_RECOMMENDATIONS,
+                totalCost,
+                potentialSavings,
+            };
+            
+            costCache.set(cacheKey, result);
+            analytics.trackEvent('cost_data_fetched', { source: 'demo' });
+            return result;
+        }
+
+        const { data, error } = await supabase
+            .from('cost_data')
+            .select('*')
+            .single();
+
+        if (error) throw new AppError('Failed to fetch cost data', 'COST_FETCH_ERROR', 400, { originalError: error });
+        
+        costCache.set(cacheKey, data);
+        logger.info('Cost data fetched successfully', { source: 'supabase' });
+        analytics.trackEvent('cost_data_fetched', { source: 'supabase' });
+        return data;
+    } catch (error) {
+        const appError = handleApiError(error);
+        logger.error('Error fetching cost data', appError);
+        analytics.trackError(appError);
+        throw appError;
     }
-
-    const { data, error } = await supabase
-        .from('cost_data')
-        .select('*')
-        .single();
-
-    if (error) throw error;
-    return data;
 }
 
 export async function fetchCostTrends(months: number = 6): Promise<MonthlyCost[]> {
-    if (isDemoMode) {
-        await new Promise(resolve => setTimeout(resolve, 300));
-        return DEMO_MONTHLY_COSTS.slice(-months);
-    }
+    try {
+        const cacheKey = `cost_trends_${months}`;
+        const cached = costCache.get(cacheKey);
+        if (cached) {
+            logger.debug(`Cost trends (${months} months) retrieved from cache`);
+            return cached;
+        }
 
-    const { data, error } = await supabase
-        .from('monthly_costs')
-        .select('*')
+        if (isDemoMode) {
+            await new Promise(resolve => setTimeout(resolve, 300));
+            const result = DEMO_MONTHLY_COSTS.slice(-months);
+            costCache.set(cacheKey, result);
+            return result;
+        }
+
+        const { data, error } = await supabase
+            .from('monthly_costs')
+            .select('*')
         .order('month', { ascending: true })
         .limit(months);
 

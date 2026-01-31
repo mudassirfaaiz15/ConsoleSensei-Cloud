@@ -3,6 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/ca
 import { Button } from '@/app/components/ui/button';
 import { Badge } from '@/app/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/app/components/ui/tabs';
+import { analytics } from '@/lib/utils/analytics';
+import { performanceMonitor } from '@/lib/utils/performance';
 import {
     DollarSign,
     TrendingUp,
@@ -104,6 +106,12 @@ export function CostBreakdownPage() {
     const [timeRange, setTimeRange] = useState('6m');
     const totalCost = SERVICE_COSTS.reduce((sum, s) => sum + s.cost, 0);
     const potentialSavings = COST_RECOMMENDATIONS.reduce((sum, r) => sum + r.savings, 0);
+
+    // Track page view and performance
+    useState(() => {
+        analytics.trackPageView('Cost Breakdown', '/costs');
+        performanceMonitor.mark('cost-breakdown-render');
+    });
 
     return (
         <div className="p-6 space-y-6">

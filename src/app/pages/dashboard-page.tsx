@@ -3,6 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/ca
 import { Button } from '@/app/components/ui/button';
 import { Badge } from '@/app/components/ui/badge';
 import { Progress } from '@/app/components/ui/progress';
+import { analytics } from '@/lib/utils/analytics';
+import { performanceMonitor } from '@/lib/utils/performance';
 import {
   Server,
   HardDrive,
@@ -75,6 +77,12 @@ export function DashboardPage() {
   const [selectedResource, setSelectedResource] = useState<Resource | null>(null);
   const [resourceDialogOpen, setResourceDialogOpen] = useState(false);
   const [searchDialogOpen, setSearchDialogOpen] = useState(false);
+
+  // Track page view and start performance monitoring
+  useState(() => {
+    analytics.trackPageView('Dashboard', '/dashboard');
+    performanceMonitor.mark('dashboard-render');
+  });
 
   // Onboarding
   const { showOnboarding, completeOnboarding } = useOnboarding();

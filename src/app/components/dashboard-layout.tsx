@@ -25,6 +25,7 @@ import { CommandPalette, useCommandPalette } from '@/app/components/command-pale
 const NAVIGATION = [
   { id: 'nav-dashboard', name: 'Dashboard', href: '/app', icon: LayoutDashboard },
   { id: 'nav-scan', name: 'Scan AWS', href: '/app/connect', icon: Scan },
+  { id: 'nav-resources', name: 'AWS Resources', href: '/app/aws-resources', icon: Cloud },
   { id: 'nav-accounts', name: 'Accounts', href: '/app/accounts', icon: Cloud },
   { id: 'nav-costs', name: 'Costs', href: '/app/costs', icon: DollarSign },
   { id: 'nav-security', name: 'Security', href: '/app/security', icon: Shield },

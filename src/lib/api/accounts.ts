@@ -1,4 +1,6 @@
 import { supabase, isDemoMode } from '@/lib/supabase';
+import { handleApiError } from '@/lib/utils/error-handler';
+import { logger } from '@/lib/utils/logger';
 
 // Types
 export interface AWSAccount {
@@ -58,13 +60,18 @@ export async function fetchAccounts(): Promise<AWSAccount[]> {
         return DEMO_ACCOUNTS;
     }
 
-    const { data, error } = await supabase
-        .from('aws_accounts')
-        .select('*')
-        .order('created_at', { ascending: false });
+    try {
+        const { data, error } = await supabase
+            .from('aws_accounts')
+            .select('*')
+            .order('created_at', { ascending: false });
 
-    if (error) throw error;
-    return data || [];
+        if (error) throw error;
+        return data || [];
+    } catch (error) {
+        logger.error('Failed to fetch accounts', error as Error);
+        throw handleApiError(error);
+    }
 }
 
 export async function addAccount(account: Omit<AWSAccount, 'id'>): Promise<AWSAccount> {

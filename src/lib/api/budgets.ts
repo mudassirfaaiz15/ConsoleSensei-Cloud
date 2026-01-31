@@ -1,4 +1,6 @@
 import { supabase, isDemoMode } from '@/lib/supabase';
+import { handleApiError } from '@/lib/utils/error-handler';
+import { logger } from '@/lib/utils/logger';
 
 // Types
 export interface Budget {

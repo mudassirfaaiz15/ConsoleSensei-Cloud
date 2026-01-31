@@ -1,4 +1,6 @@
 import { supabase, isDemoMode } from '@/lib/supabase';
+import { handleApiError } from '@/lib/utils/error-handler';
+import { logger } from '@/lib/utils/logger';
 
 // Types
 export interface TeamMember {
@@ -90,29 +92,34 @@ export async function fetchTeamData(): Promise<TeamData> {
         };
     }
 
-    const { data, error } = await supabase
-        .from('team_members')
-        .select('*')
-        .order('created_at', { ascending: false });
+    try {
+        const { data, error } = await supabase
+            .from('team_members')
+            .select('*')
+            .order('created_at', { ascending: false });
 
-    if (error) throw error;
+        if (error) throw error;
 
-    const { data: invitations } = await supabase
-        .from('invitations')
-        .select('*')
-        .eq('status', 'pending');
+        const { data: invitations } = await supabase
+            .from('invitations')
+            .select('*')
+            .eq('status', 'pending');
 
-    const members = data || [];
-    const pendingInvitations = invitations || [];
+        const members = data || [];
+        const pendingInvitations = invitations || [];
 
-    return {
-        members,
-        invitations: pendingInvitations,
-        totalMembers: members.length,
-        activeMembers: members.filter((m: TeamMember) => m.status === 'active').length,
-        pendingInvites: pendingInvitations.length,
-        adminCount: members.filter((m: TeamMember) => m.role === 'admin' || m.role === 'owner').length,
-    };
+        return {
+            members: (members as TeamMember[]),
+            invitations: (pendingInvitations as Invitation[]),
+            totalMembers: members.length,
+            activeMembers: members.filter((m: TeamMember) => m.status === 'active').length,
+            pendingInvites: pendingInvitations.length,
+            adminCount: members.filter((m: TeamMember) => m.role === 'admin' || m.role === 'owner').length,
+        };
+    } catch (error) {
+        logger.error('Failed to fetch team data', error as Error);
+        throw handleApiError(error);
+    }
 }
 
 export async function inviteMember(email: string, role: Invitation['role']): Promise<Invitation> {

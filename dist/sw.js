@@ -9,8 +9,9 @@ const STATIC_ASSETS = [
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
-            console.log('Service Worker: Caching static assets');
-            return cache.addAll(STATIC_ASSETS);
+            return cache.addAll(STATIC_ASSETS).catch((error) => {
+                console.error('Failed to cache static assets:', error);
+            });
         })
     );
     self.skipWaiting();
@@ -24,10 +25,13 @@ self.addEventListener('activate', (event) => {
                 cacheNames
                     .filter((name) => name !== CACHE_NAME)
                     .map((name) => {
-                        console.log('Service Worker: Deleting old cache:', name);
-                        return caches.delete(name);
+                        return caches.delete(name).catch((error) => {
+                            console.error('Failed to delete cache:', error);
+                        });
                     })
             );
+        }).catch((error) => {
+            console.error('Activate handler error:', error);
         })
     );
     self.clients.claim();
@@ -57,7 +61,7 @@ self.addEventListener('fetch', (event) => {
 
                 return response;
             })
-            .catch(() => {
+            .catch((error) => {
                 // Network failed, try cache
                 return caches.match(event.request).then((cachedResponse) => {
                     if (cachedResponse) {
@@ -70,13 +74,19 @@ self.addEventListener('fetch', (event) => {
                     }
 
                     return new Response('Offline', { status: 503 });
+                }).catch((cacheError) => {
+                    console.error('Cache retrieval error:', cacheError);
+                    return new Response('Offline', { status: 503 });
                 });
             })
     );
 });
 
-// Background sync for AWS data
-self.addEventListener('sync', (event) => {
+// Backgevent.waitUntil(
+            Promise.resolve().catch((error) => {
+                console.error('Background sync error:', error);
+            })
+        );> {
     if (event.tag === 'sync-aws-data') {
         console.log('Service Worker: Syncing AWS data in background');
         // Would trigger data sync here
